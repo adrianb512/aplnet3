@@ -1,15 +1,26 @@
 import './App.css';
-import {useState} from "react";
+import {useState,useEffect} from "react";
 import "milligram";
 import MovieForm from "./MovieForm";
 import MoviesList from "./MoviesList";
-
+ import React from 'react';
 
 // npm instal
 // npm start
 function App() {
     const [movies, setMovies] = useState([]);
     const [addingMovie, setAddingMovie] = useState(false);
+
+useEffect(() => {
+    const fetchMovies = async () => {
+        const response = await fetch(`/movies`);
+        if (response.ok) {
+            const movies = await response.json();
+            setMovies(movies);
+        }
+    };
+    fetchMovies();
+}, []);
 
 
     async function handleAddMovie(movie) {
@@ -19,12 +30,38 @@ function App() {
         headers: { 'Content-Type': 'application/json' }
       });
       if (response.ok) {
-
+          const addingrespone = await response.json();
+        movie.id=addingrespone.id;
         setMovies([...movies, movie]);
         setAddingMovie(false);
       }else
            alert('blad dodania');
 }
+
+
+    async function handleDeleteMovie(movie) {
+
+            const confirmed = window.confirm(
+      "Czy na pewno chcesz usunąć ten film?"
+    );
+
+    if (confirmed) {
+
+
+      const response = await fetch(`/movies/${movie.id}`, {
+        method: 'DELETE',
+
+      });
+      if (response.ok) {
+      const nextMovies = movies.filter(m => m !== movie);
+        setMovies(nextMovies);
+
+      }
+
+          }
+
+}
+
 
     return (
         <div className="container">
@@ -32,7 +69,8 @@ function App() {
             {movies.length === 0
                 ? <p>No movies yet. Maybe add something?</p>
                 : <MoviesList movies={movies}
-                              onDeleteMovie={(movie) => setMovies(movies.filter(m => m !== movie))}
+                              onDeleteMovie={(movie) => handleDeleteMovie(movie)}
+
                 />}
             {addingMovie
                 ? <MovieForm onMovieSubmit={handleAddMovie}

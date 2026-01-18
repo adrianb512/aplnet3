@@ -9,6 +9,7 @@ export default function MovieListItem(props) {
                 directed by {props.movie.director}
                 {' '}
                 <a onClick={props.onDelete}>Delete</a>
+
             </div>
             {props.movie.description}
         </div>
