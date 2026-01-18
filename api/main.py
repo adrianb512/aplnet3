@@ -10,6 +10,8 @@ class Movie(BaseModel):
     title: str
     year: str
 
+##python -m pip install -r requirements.txt
+##python -m fastapi dev main.py
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="../ui/build/static", check_dir=False), name="static")
