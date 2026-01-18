@@ -133,7 +133,7 @@ useEffect(() => {
         headers: { 'Content-Type': 'application/json' }
       });
       if (response.ok) {
-          
+
      alert('przypisano');
 
      setPrzypisz();
