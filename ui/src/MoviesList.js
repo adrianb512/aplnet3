@@ -6,6 +6,7 @@ export default function MoviesList(props) {
         <ul className="movies-list">
             {props.movies.map(movie => <li key={movie.title}>
                 <MovieListItem movie={movie} onDelete={() => props.onDeleteMovie(movie)}
+                               onPrzypisz={() => props.onPrzypisz(movie)}
                 />
             </li>)}
         </ul>

@@ -6,9 +6,11 @@ export default function MovieListItem(props) {
                 {' '}
                 <span>({props.movie.year})</span>
                 {' '}
-                directed by {props.movie.director}
+                actors: {props.movie.actors}
                 {' '}
                 <a onClick={props.onDelete}>Delete</a>
+                 {' '}
+                <a onClick={props.onPrzypisz}>Przypiszaktora</a>
 
             </div>
             {props.movie.description}

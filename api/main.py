@@ -10,6 +10,16 @@ class Movie(BaseModel):
     title: str
     year: str
 
+
+class Actor(BaseModel):
+    name: str
+    surname: str
+
+class Dane(BaseModel):
+        id_film: int
+        id_actor: int
+
+
 ##python -m pip install -r requirements.txt
 ##python -m fastapi dev main.py
 app = FastAPI()
@@ -21,16 +31,37 @@ def serve_react_app():
    return FileResponse("../ui/build/index.html")
 
 @app.get('/movies')
-def get_movies():  # put application's code here
+def get_movies():
     db = sqlite3.connect('movies.db')
     cursor = db.cursor()
-    movies = cursor.execute('SELECT * FROM movies')
+
+    movies = cursor.execute("""
+    SELECT
+        f.id,
+        f.title,
+        f.year,
+        COALESCE(
+            GROUP_CONCAT(a.name || ' ' || a.surname, ', '),
+            ''
+        ) AS actors
+    FROM movies AS f
+    LEFT JOIN actor_to_movie AS b ON f.id = b.id_movie
+    LEFT JOIN actors AS a ON b.id_actor = a.id_actor
+    GROUP BY f.id
+    ORDER BY f.id;
+    """)
 
     output = []
     for movie in movies:
-         movie = {'id': movie[0], 'title': movie[1], 'year': movie[2], 'actors': movie[3]}
-         output.append(movie)
+        output.append({
+            'id': movie[0],
+            'title': movie[1],
+            'year': movie[2],
+            'actors': movie[3]
+        })
+
     return output
+
 
 @app.get('/movies/{movie_id}')
 def get_single_movie(movie_id:int):  # put application's code here
@@ -81,6 +112,65 @@ def delete_movies(movie_id:int):
     cursor.execute("DELETE FROM movies")
     db.commit()
     return {"message": f"Deleted {cursor.rowcount} movies"}
+
+
+
+
+
+
+
+@app.get('/actors')
+def get_actors():  # put application's code here
+    db = sqlite3.connect('movies.db')
+    cursor = db.cursor()
+    actors = cursor.execute('SELECT * FROM actors')
+
+    output = []
+    for actor in actors:
+         actor = {'id_actor': actor[0], 'name': actor[1], 'surname': actor[2]}
+         output.append(actor)
+    return output
+
+@app.get('/actors/{actors_id}')
+def get_single_actor(actors_id:int):  # put application's code here
+    db = sqlite3.connect('movies.db')
+    cursor = db.cursor()
+    actor = cursor.execute(f"SELECT * FROM actors WHERE Id_actor={actors_id}").fetchone()
+    if actor is None:
+        return {'message': "actor not found"}
+    return {'Id_actor': actor[0], 'name': actor[1], 'surname': actor[2]}
+
+@app.post("/actors")
+def add_actor(actor: Actor):
+    db = sqlite3.connect('movies.db')
+    cursor = db.cursor()
+    cursor.execute(f"INSERT INTO actors (name, surname) VALUES ('{actor.name}', '{actor.surname}')")
+    db.commit()
+    return {"id_actor":cursor.lastrowid, "message": f" aktor with id = {cursor.lastrowid} added successfully"}
+    # movie = models.Movie.create(**movie.dict())
+    # return movie
+
+
+@app.delete("/actors/{actor_id}")
+def delete_actor(actor_id:int):
+    db = sqlite3.connect('movies.db')
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM actors WHERE id_actor = ?", (actor_id,))
+    db.commit()
+    if cursor.rowcount == 0:
+        return {"message": f"actor  with id = {actor_id} not found"}
+    return {"message": f"actor with id = {actor_id} deleted successfully"}
+
+
+@app.post("/przypisz")
+def add_actor(dane: Dane):
+    db = sqlite3.connect('movies.db')
+    cursor = db.cursor()
+    cursor.execute(f"INSERT INTO actor_to_movie (id_movie, id_actor) VALUES ('{dane.id_film}', '{dane.id_actor}')")
+    db.commit()
+    return {"id_actor":cursor.lastrowid, "message": f" aktor with id = {cursor.lastrowid} added successfully"}
+    # movie = models.Movie.create(**movie.dict())
+    # return movie
 
 
 # if __name__ == '__main__':
